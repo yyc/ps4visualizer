@@ -1,6 +1,6 @@
 $(document).ready(function(){
   var margins = [0, 0, 50, 50] // up down left right
-  var w = 5000,
+  var w = 7000,
     h = 5000,
     rx = w / 2,
     ry = h / 2,
@@ -15,14 +15,29 @@ $(document).ready(function(){
   var svg = d3.select("#canvas").append("svg")
       .attr("width", w + "px")
       .attr("height", h + "px")
+      .style("pointer-events", "none")
       .append("g")
-    	.attr("transform", "translate(" + 50 + "," + 10 + ")");
+    	.attr("transform", "translate(" + 50 + "," + 50 + ")");
 
+  var file = window.location.hash.substring(1);
+  if(file == ""){
+    file = "actors.txt";
+  }
+  $.get(file, updateText);
   
-  $.get("TestDB_4.txt", update);
+  $("#file").change(function(){
+    var value = $(this).val();
+    if(value != ""){
+      window.location.hash = "#" + value;
+      location.reload();
+    }
+  })
 
-  function update(text){
+  function updateText(text){
     var db = DBParser(text);
+    update(db);
+  }
+  function update(db){
     var i = 0;
 /*
       var nodes = tree.nodes(db);
@@ -36,7 +51,7 @@ $(document).ready(function(){
       .attr("fill", "black");
 */
     // Compute the new tree layout.
-    var nodes = tree.nodes(db),
+    var nodes = tree.nodes(db).reverse(),
      links = tree.links(nodes);
   
     // Normalize for fixed-depth.
@@ -50,13 +65,18 @@ $(document).ready(function(){
     var nodeEnter = node.enter().append("g")
      .attr("class", "node")
      .attr("transform", function(d) { 
-      return "translate(" + d.x + "," + d.y + ")"; });
+      return "translate(" + d.x + "," + d.y + ")"; })
+     .on("click", click);
+
+
   
-    nodeEnter.append("circle")
+    nodeEnter.append("svg:circle")
      .attr("r", 5)
-     .style("fill", "#fff");
+     .style("fill", "#fff")
+//     nodeEnter.on("style", function(d, i){alert(d, i);});
+
   
-    nodeEnter.append("text")
+    nodeEnter.append("svg:text")
      .attr("y", function(d) { 
       return d.children || d._children ? -13 : 13; })
      .attr("dy", ".35em")
@@ -74,10 +94,73 @@ $(document).ready(function(){
      .attr("class", "link")
      .attr("d", diagonal);
 
-
+    // Transition nodes to their new position.
+    var nodeUpdate = node.transition()
+        .duration(500)
+        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  
+    nodeUpdate.select("circle")
+        .attr("r", 4.5)
+        .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+  
+    nodeUpdate.select("text")
+        .style("fill-opacity", 1);
+  
+    // Transition exiting nodes to the parent's new position.
+    var nodeExit = node.exit().transition()
+        .duration(500)
+        .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+        .remove();
+  
+    nodeExit.select("circle")
+        .attr("r", 1e-6);
+  
+    nodeExit.select("text")
+        .style("fill-opacity", 1e-6);
+    // Update the links…
+    var link = svg.selectAll("path.link")
+        .data(links, function(d) { return d.target.id; });
+  
+    // Enter any new links at the parent's previous position.
+    link.enter().insert("path", "g")
+        .attr("class", "link")
+        .attr("d", function(d) {
+          var o = {x: source.x0, y: source.y0};
+          return diagonal({source: o, target: o});
+        });
+  
+    // Transition links to their new position.
+    link.transition()
+        .duration(500)
+        .attr("d", diagonal);
+  
+    // Transition exiting nodes to the parent's new position.
+    link.exit().transition()
+        .duration(500)
+        .attr("d", function(d) {
+          var o = {x: d.x, y: d.y};
+          return diagonal({d: o, d: o});
+        })
+        .remove();
+  
+    // Stash the old positions for transition.
+    nodes.forEach(function(d) {
+      d.x0 = d.x;
+      d.y0 = d.y;
+    });
+  }
+  function click(d, i) {
+    console.log("clickity");
+    if (d.children) {
+    	d._children = d.children;
+    	d.children = null;
+    } else {
+    	d.children = d._children;
+    	d._children = null;
+    }
+    update(d);
   }
 
-  
 });
 
 
@@ -127,8 +210,8 @@ function DBParser(text){
       } else{
 */
         obj.children = [];
-        obj.children[0] = parseTree(db, n + 1, obj, true);
-        obj.children[1] = parseTree(db, n + 1, obj, false);
+        obj.children[1] = parseTree(db, n + 1, obj, true);
+        obj.children[0] = parseTree(db, n + 1, obj, false);
 //       }
     } else if(node.weight == undefined){ // null node
       obj.name = null; 

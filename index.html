@@ -4,6 +4,12 @@
         <script src="jquery-2.1.4.min.js"></script>
         <script src="tree.js"></script>
         <style>
+          body{
+            font-size: medium;
+          }
+          #canvas{
+            pointer-events: none;
+          }
           path.arc {
             cursor: move;
             fill: #fff;
@@ -11,13 +17,13 @@
           
           .node circle {
             fill: #fff;
-            stroke: steelblue;
+            stroke: limegreen;
             stroke-width: 1.5px;
           }
           
           .node {
             font-size: 10px;
-            pointer-events: none;
+            pointer-events: all;
           }
           
           .link {
@@ -29,12 +35,21 @@
         <title>CS2020 Problem Set 4 Tree Visualizer</title>
     </head>
     <body>
-      
+        Select File: <select id="file">
+          <option value="" default>Choose File</option>
+          <option value="actors.txt">actors.txt</option>
+          <option value="TestDB_1.txt">TestDB_1.txt</option>
+          <option value="TestDB_2.txt">TestDB_2.txt</option>
+          <option value="TestDB_3.txt">TestDB_3.txt</option>
+          <option value="TestDB_4.txt">TestDB_4.txt</option>
+          <option value="TestDB_5.txt">TestDB_5.txt</option>
+        </select>
         <div id="canvas"></div>
         <footer>
           Made with <a href="https://d3js.org/"> D3.js</a> 
           <!-- With reference from the D3 tutorial http://www.d3noob.org/2014/01/tree-diagrams-in-d3js_11.html
-                Cluster Layout documentation https://github.com/mbostock/d3/wiki/Cluster-Layout           -->
+                Cluster Layout documentation https://github.com/mbostock/d3/wiki/Cluster-Layout           
+                Collapsible tree tutorial http://bl.ocks.org/d3noob/8375092 -->
         </footer>
     </body>
 </html>
