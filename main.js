@@ -1,6 +1,6 @@
 $(document).ready(function(){
   var height = 1000;
-  var width = 1000;
+  var width = 5000;
   var rx = width / 2;
   var ry = height / 2;
   var diagonal = d3.svg.diagonal.radial()
